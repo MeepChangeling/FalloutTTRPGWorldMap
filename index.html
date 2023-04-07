@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+		.my-div-icon.no-wrap {
+		  white-space: nowrap;
+		}
+		.my-div-icon.center-text {
+		  font-size: 1.2em;
+		}
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+		<script src="js\rulerplugin\Leaflet.LinearMeasurement.js"></script>
+        <script src="data/gudmapforpeoples_1.js"></script>        
+        <script src="data/FalloutNationalMapBigRoads_3.js"></script>
+        <script src="data/Markers_4.js"></script>
+        <script>
+		var BGMap = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {minZoom: 1, maxNativeZoom: 19, maxZoom: 19, continousWorld: false, noWrap: true, crs: L.CRS.Simple,});
+		SatMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {minZoom: 1, maxNativeZoom: 19, maxZoom: 19, continousWorld: false, noWrap: true, crs: L.CRS.Simple,});
+		Roads = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-hybrid/{z}/{x}/{y}{r}.{ext}', {
+			attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+			subdomains: 'abcd',
+			minZoom: 1,
+			maxZoom: 19,
+			ext: 'png'
+		});
+		Rails =  L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
+			minZoom: 1,
+			maxZoom: 19,
+			attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Map style: &copy; <a href="https://www.OpenRailwayMap.org">OpenRailwayMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+		});
+		
+        var map = L.map('map', {
+		  zoomControl: true,
+		  maxZoom: 19,
+		  minZoom: 1,
+		  layers: [BGMap],
+		}).setView([33.7832, -101.8424], 4);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'feet',
+            secondaryLengthUnit: 'miles',
+            primaryAreaUnit: 'sqfeet',
+            secondaryAreaUnit: 'sqmiles'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+		
+		
+		
+		var baseMaps = {
+			"Street Maps": BGMap,
+			"Satalite Map": SatMap,
+		}
+		var overlays = {
+			"Roads and Towns": Roads,
+			"Rail Lines": Rails,
+		}
+		
+		
+        function style_gudmapforpeoples_1_0() {
+    return {
+        pane: 'pane_gudmapforpeoples_1',
+        opacity: 1,
+        color: 'rgba(35,35,35,1.0)',
+        dashArray: '',
+        lineCap: 'butt',
+        lineJoin: 'miter',
+        weight: 2.0, 
+        fill: true,
+        fillOpacity: 1,
+        fillColor: 'rgba(0,0,0,0.0)',
+        interactive: false,
+    }
+}
+
+
+function addLabels() {
+  layer_gudmapforpeoples_1.eachLayer(function(layer) {
+    if (map.getZoom() >= 5 && map.getZoom() <= 19) {
+      if (!layer.label) {
+        layer.label = L.marker(layer.getBounds().getCenter(), {
+          icon: L.divIcon({
+            className: 'my-div-icon center-text',
+            html: '<b>' + layer.feature.properties.Name + '</b>',
+            iconSize: [50, 50]
+          }),
+          interactive: false
+        });
+        layer.label.addTo(map);
+      }
+    } else {
+      if (layer.label) {
+        map.removeLayer(layer.label);
+        layer.label = undefined;
+      }
+    }
+  });
+}
+
+map.createPane('pane_gudmapforpeoples_1');
+map.getPane('pane_gudmapforpeoples_1').style.zIndex = 401;
+map.getPane('pane_gudmapforpeoples_1').style['mix-blend-mode'] = 'normal';
+var layer_gudmapforpeoples_1 = new L.geoJson(json_gudmapforpeoples_1, {
+  attribution: '',
+  interactive: false,
+  dataVar: 'json_gudmapforpeoples_1',
+  layerName: 'layer_gudmapforpeoples_1',
+  pane: 'pane_gudmapforpeoples_1',
+  
+  style: style_gudmapforpeoples_1_0,
+});
+bounds_group.addLayer(layer_gudmapforpeoples_1);
+map.addLayer(layer_gudmapforpeoples_1);
+
+map.on('zoomend', addLabels);
+addLabels();
+        
+        function pop_FalloutNationalMapBigRoads_3(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Name'] !== null ? autolinker.link(feature.properties['Name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_FalloutNationalMapBigRoads_3_0() {
+            return {
+                pane: 'pane_FalloutNationalMapBigRoads_3',
+                opacity: 1,
+                color: 'rgba(246,207,101,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 2.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FalloutNationalMapBigRoads_3');
+        map.getPane('pane_FalloutNationalMapBigRoads_3').style.zIndex = 403;
+        map.getPane('pane_FalloutNationalMapBigRoads_3').style['mix-blend-mode'] = 'normal';
+        var layer_FalloutNationalMapBigRoads_3 = new L.geoJson(json_FalloutNationalMapBigRoads_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FalloutNationalMapBigRoads_3',
+            layerName: 'layer_FalloutNationalMapBigRoads_3',
+            pane: 'pane_FalloutNationalMapBigRoads_3',
+            onEachFeature: pop_FalloutNationalMapBigRoads_3,
+            style: style_FalloutNationalMapBigRoads_3_0,
+        });
+        bounds_group.addLayer(layer_FalloutNationalMapBigRoads_3);
+        map.addLayer(layer_FalloutNationalMapBigRoads_3);
+        function pop_Markers_4(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Name'] !== null ? autolinker.link(feature.properties['Name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['description'] !== null ? autolinker.link(feature.properties['description'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_Markers_4_0() {
+            return {
+                pane: 'pane_Markers_4',
+                radius: 4.8,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,255,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Markers_4');
+        map.getPane('pane_Markers_4').style.zIndex = 404;
+        map.getPane('pane_Markers_4').style['mix-blend-mode'] = 'normal';
+        var layer_Markers_4 = new L.geoJson(json_Markers_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Markers_4',
+            layerName: 'layer_Markers_4',
+            pane: 'pane_Markers_4',
+            onEachFeature: pop_Markers_4,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Markers_4_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Markers_4);
+        map.addLayer(layer_Markers_4);
+		
+		function addLabelsForMarkers() {
+  layer_Markers_4.eachLayer(function(layer) {
+    if (map.getZoom() >= 7 && map.getZoom() <= 19) {
+      if (!layer.label) {
+        layer.label = L.marker(layer.getLatLng(), {
+          icon: L.divIcon({
+            className: 'my-div-icon no-wrap',
+            html: layer.feature.properties.Name,
+            iconSize: [-20, 0]
+          }),
+          interactive: false
+        });
+        layer.label.addTo(map);
+      }
+    } else {
+      if (layer.label) {
+        map.removeLayer(layer.label);
+        layer.label = undefined;
+      }
+    }
+  });
+}
+
+map.on('zoomend', function() {
+  addLabels();
+  addLabelsForMarkers();
+});
+
+addLabels();
+addLabelsForMarkers();
+
+        map.on("zoomend", function(){
+
+                if (map.hasLayer(layer_gudmapforpeoples_1)) {
+                    if (map.getZoom() <= 6 && map.getZoom() >= 19) {
+                        layer_gudmapforpeoples_1.eachLayer(function (layer) {
+                            layer.openTooltip();
+                        });
+                    } else {
+                        layer_gudmapforpeoples_1.eachLayer(function (layer) {
+                            layer.closeTooltip();
+                        });
+                    }
+                }
+                if (map.hasLayer(layer_FalloutNationalMapBigRoads_3)) {
+                    if (map.getZoom() <= 8 && map.getZoom() >= 19) {
+                        layer_FalloutNationalMapBigRoads_3.eachLayer(function (layer) {
+                            layer.openTooltip();
+                        });
+                    } else {
+                        layer_FalloutNationalMapBigRoads_3.eachLayer(function (layer) {
+                            layer.closeTooltip();
+                        });
+                    }
+                }
+                if (map.hasLayer(layer_Markers_4)) {
+                    if (map.getZoom() <= 7 && map.getZoom() >= 19) {
+                        layer_Markers_4.eachLayer(function (layer) {
+                            layer.openTooltip();
+                        });
+                    } else {
+                        layer_Markers_4.eachLayer(function (layer) {
+                            layer.closeTooltip();
+                        });
+                    }
+                }
+        });
+        setBounds();
+        var i = 0;
+        layer_gudmapforpeoples_1.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['Name'] !== null?String('<div style="color: #323232; font-size: 12pt; font-weight: bold; font-family: \'Noto Serif Cond\', sans-serif;">' + layer.feature.properties['Name']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_gudmapforpeoples_1'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        var i = 0;
+        layer_FalloutNationalMapBigRoads_3.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['Name'] !== null?String('<div style="color: #323232; font-size: 10pt; font-family: \'Open Sans\', sans-serif;">' + layer.feature.properties['Name']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_FalloutNationalMapBigRoads_3'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        var i = 0;
+        layer_Markers_4.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['Name'] !== null?String('<div style="color: #323232; font-size: 10pt; font-family: \'Open Sans\', sans-serif;">' + layer.feature.properties['Name']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_Markers_4'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+                if (map.hasLayer(layer_gudmapforpeoples_1)) {
+                    if (map.getZoom() <= 6 && map.getZoom() >= 19) {
+                        layer_gudmapforpeoples_1.eachLayer(function (layer) {
+                            layer.openTooltip();
+                        });
+                    } else {
+                        layer_gudmapforpeoples_1.eachLayer(function (layer) {
+                            layer.closeTooltip();
+                        });
+                    }
+                }
+                if (map.hasLayer(layer_FalloutNationalMapBigRoads_3)) {
+                    if (map.getZoom() <= 8 && map.getZoom() >= 19) {
+                        layer_FalloutNationalMapBigRoads_3.eachLayer(function (layer) {
+                            layer.openTooltip();
+                        });
+                    } else {
+                        layer_FalloutNationalMapBigRoads_3.eachLayer(function (layer) {
+                            layer.closeTooltip();
+                        });
+                    }
+                }
+                if (map.hasLayer(layer_Markers_4)) {
+                    if (map.getZoom() <= 7 && map.getZoom() >= 19) {
+                        layer_Markers_4.eachLayer(function (layer) {
+                            layer.openTooltip();
+                        });
+                    } else {
+                        layer_Markers_4.eachLayer(function (layer) {
+                            layer.closeTooltip();
+                        });
+                    }
+                }
+        resetLabels([layer_gudmapforpeoples_1,layer_FalloutNationalMapBigRoads_3,layer_Markers_4]);
+        map.on("zoomend", function(){
+            resetLabels([layer_gudmapforpeoples_1,layer_FalloutNationalMapBigRoads_3,layer_Markers_4]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_gudmapforpeoples_1,layer_FalloutNationalMapBigRoads_3,layer_Markers_4]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_gudmapforpeoples_1,layer_FalloutNationalMapBigRoads_3,layer_Markers_4]);
+        });
+		
+		var controlLayers = L.control.layers(baseMaps, overlays).addTo(map);
+		
+			L.control.scale({
+				imperial: true,
+				metric: false
+			}).addTo(map);
+
+	
+		
+        </script>
+    </body>
+</html>
